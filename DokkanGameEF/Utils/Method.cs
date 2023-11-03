@@ -27,5 +27,26 @@ namespace DokkanGameEF.Utils
             System.Buffer.BlockCopy(salt, 0, hashPlusSalt, hash.Length, salt.Length);
             return hashPlusSalt;
         }
+
+        public static bool VerifyPassword(string enteredPassword, byte[] storedHash)
+        {
+            byte[] salt = new byte[32];
+            Buffer.BlockCopy(storedHash, storedHash.Length - salt.Length, salt, 0, salt.Length);
+
+            byte[] plainTextBytes = Encoding.Unicode.GetBytes(enteredPassword);
+            byte[] combinedBytes = new byte[plainTextBytes.Length + salt.Length];
+            Buffer.BlockCopy(plainTextBytes, 0, combinedBytes, 0, plainTextBytes.Length);
+            Buffer.BlockCopy(salt, 0, combinedBytes, plainTextBytes.Length, salt.Length);
+
+            System.Security.Cryptography.HashAlgorithm hashAlgo = new System.Security.Cryptography.SHA256Managed();
+            byte[] enteredPasswordHash = hashAlgo.ComputeHash(combinedBytes);
+
+            for (int i = 0; i < enteredPasswordHash.Length; i++)
+            {
+                if (enteredPasswordHash[i] != storedHash[i])
+                    return false;
+            }
+            return true;
+        }
     }
 }
